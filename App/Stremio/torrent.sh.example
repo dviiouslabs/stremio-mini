@@ -1,0 +1,10 @@
+#!/bin/sh
+# OPTIONAL fallback, used only when server.txt has no server.
+# Rename to torrent.sh and chmod +x. It receives a magnet link as $1 and must
+# print ONE playable http(s) URL on its first stdout line (e.g. start your own
+# torrent-streaming tool in the background and echo its local URL).
+# Example skeleton:
+#   my-torrent-streamer --magnet "$1" --port 8888 >/dev/null 2>&1 &
+#   sleep 3; echo "http://127.0.0.1:8888/"
+echo "not configured" >&2
+exit 1

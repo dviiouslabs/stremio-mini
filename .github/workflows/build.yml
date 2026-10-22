@@ -1,0 +1,21 @@
+name: build-miyoo-mini
+on:
+  push:
+  workflow_dispatch:
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/shauninman/union-miyoomini-toolchain:latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build
+        run: make
+      - name: Package
+        run: |
+          (command -v zip >/dev/null) || (apt-get update && apt-get install -y zip)
+          ./package.sh
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Stremio-Mini
+          path: Stremio-Mini.zip

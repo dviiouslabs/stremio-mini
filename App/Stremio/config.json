@@ -1,0 +1,6 @@
+{
+	"label": "Stremio",
+	"icon": "icon.png",
+	"launch": "launch.sh",
+	"description": "Browse Stremio addon catalogs and play direct streams"
+}

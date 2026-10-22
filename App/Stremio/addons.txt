@@ -1,0 +1,14 @@
+# Stremio addon manifest URLs, one per line. Lines starting with # are ignored.
+# stremio:// links are accepted too.
+#
+# Cinemeta is Stremio's official metadata addon: it provides catalogs
+# (Popular / Top), posters, descriptions and episode lists, but no video.
+https://v3-cinemeta.strem.io/manifest.json
+
+# To actually watch something you need an addon that returns direct http(s)
+# video links for content you have the right to watch (your own media server
+# addon, a free/public-domain catalog addon, etc.). Add its manifest URL here:
+# https://example.com/your-addon/manifest.json
+#
+# Streams that are not plain http(s) URLs (e.g. torrent hashes) are hidden,
+# since the device can't play them.

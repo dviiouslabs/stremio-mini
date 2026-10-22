@@ -1,0 +1,8 @@
+src/*.o
+App/Stremio/stremio-mini
+App/Stremio/cache/
+App/Stremio/lib/
+App/Stremio/*.log
+App/Stremio/last_stream.txt
+test/test_addon
+Stremio-Mini.zip
