@@ -5,21 +5,12 @@ on:
 jobs:
   build:
     runs-on: ubuntu-24.04
-    container:
-      image: ghcr.io/onionui/miyoomini-toolchain:latest
     steps:
       - uses: actions/checkout@v4
-      
-      - name: Clean and Build
-        run: |
-          make clean || true
-          make
 
-      - name: Package Artifact
+      - name: Compile inside Toolchain Container
         run: |
-          (command -v zip >/dev/null) || (apt-get update && apt-get install -y zip)
-          chmod +x ./package.sh
-          ./package.sh
+          docker run --rm -v "$PWD":/root/workspace ghcr.io/onionui/miyoomini-toolchain:latest sh -c 'cd /root/workspace && make clean && make && chmod +x ./package.sh && ./package.sh'
           
       - uses: actions/upload-artifact@v4
         with:
