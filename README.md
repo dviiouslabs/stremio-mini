@@ -45,6 +45,11 @@ copies them from the toolchain into `lib/`. If it won't start, read `stremio.log
 If HTTPS gives certificate errors, `launch.sh` has a (commented) switch that disables checking.
 
 ## Tests (host)
+
+MISSING STREMIO APP FILE ITSELF AS THIS IS JUST THE BASE CODE FOR THE PROJECT!
+MORE UPDATES SOON
+PROGRAMMED WITH AI
+DVIIOUSLABS
 `make test`: JSON, HTTP, addon protocol, search, torrent URL/magnet parsing, and the account
 login/sync flow, under ASan+UBSan against `test/mock_addon.py`. The SDL UI was only
 syntax-checked, and the account/torrent endpoints were written from public docs and
