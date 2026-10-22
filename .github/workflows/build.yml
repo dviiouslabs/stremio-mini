@@ -4,9 +4,9 @@ on:
   workflow_dispatch:
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     container:
-      image: ghcr.io/shauninman/union-miyoomini-toolchain:latest
+      image: ghcr.io/onionui/miyoomini-toolchain:latest
     steps:
       - uses: actions/checkout@v4
       - name: Build
