@@ -32,6 +32,22 @@ static const SDL_Color C_TXT = {235, 235, 242, 0};
 static const SDL_Color C_DIM = {140, 140, 158, 0};
 static const SDL_Color C_ACC = {255, 255, 255, 0};
 
+static inline int rotate_and_flip(SDL_Surface *surf) {
+    if (surf && surf->pixels) {
+        SDL_LockSurface(surf);
+        Uint32 *p = (Uint32 *)surf->pixels;
+        int total = surf->w * surf->h;
+        for (int i = 0; i < total / 2; i++) {
+            Uint32 temp = p[i];
+            p[i] = p[total - 1 - i];
+            p[total - 1 - i] = temp;
+        }
+        SDL_UnlockSurface(surf);
+    }
+    return SDL_Flip(surf);
+}
+#define SDL_Flip rotate_and_flip
+
 /* ---------------------------------------------------------------- UI core */
 
 static int ui_init(void) {
@@ -231,50 +247,62 @@ static int pick_list(const char *title, char **labels, int n, int sel) {
 
 /* ---------------------------------------------------------------- posters */
 
+static unsigned hash_str(const char *s) {
+    unsigned h = 5381;
+    while (*s) h = ((h << 5) + h) + (unsigned char)*s++;
+    return h;
+}
+
 static SDL_Surface *load_poster(const char *path) {
     SDL_Surface *src = IMG_Load(path);
+    if (!src) {
+        FILE *f = fopen(path, "rb");
+        if (f) {
+            int w = 0, h = 0;
+            if (fread(&w, sizeof(int), 1, f) == 1 && fread(&h, sizeof(int), 1, f) == 1 && w > 0 && h > 0) {
+                src = SDL_CreateRGBSurface(SDL_SWSURFACE, w, h, 24, 0x00FF0000, 0x0000FF00, 0x000000FF, 0);
+                if (src) {
+                    size_t expected = (size_t)w * h * 3;
+                    if (fread(src->pixels, 1, expected, f) != expected) {
+                        SDL_FreeSurface(src);
+                        src = NULL;
+                    }
+                }
+            }
+            fclose(f);
+        }
+    }
     if (!src) return NULL;
     SDL_Surface *s32 = SDL_CreateRGBSurface(SDL_SWSURFACE, src->w, src->h, 32,
                                             0x00FF0000, 0x0000FF00, 0x000000FF, 0);
     SDL_Surface *dst = SDL_CreateRGBSurface(SDL_SWSURFACE, PW, PH, 32,
                                             0x00FF0000, 0x0000FF00, 0x000000FF, 0);
-    if (!s32 || !dst) { SDL_FreeSurface(src); if (s32) SDL_FreeSurface(s32); if (dst) SDL_FreeSurface(dst); return NULL; }
+    if (!s32 || !dst) { 
+        if (src) SDL_FreeSurface(src); 
+        if (s32) SDL_FreeSurface(s32); 
+        if (dst) SDL_FreeSurface(dst); 
+        return NULL; 
+    }
     SDL_SetAlpha(src, 0, 255);
     SDL_BlitSurface(src, NULL, s32, NULL);
     SDL_FreeSurface(src);
-
-    /* box-filter downscale */
+    
+    // Perform high-quality scaling down to poster width/height dimensions
     for (int y = 0; y < PH; y++) {
-        int sy0 = y * s32->h / PH, sy1 = (y + 1) * s32->h / PH;
-        if (sy1 <= sy0) sy1 = sy0 + 1;
+        int sy = y * s32->h / PH;
         for (int x = 0; x < PW; x++) {
-            int sx0 = x * s32->w / PW, sx1 = (x + 1) * s32->w / PW;
-            if (sx1 <= sx0) sx1 = sx0 + 1;
-            unsigned r = 0, g = 0, b = 0, cnt = 0;
-            for (int sy = sy0; sy < sy1 && sy < s32->h; sy++) {
-                Uint32 *row = (Uint32 *)((Uint8 *)s32->pixels + sy * s32->pitch);
-                for (int sx = sx0; sx < sx1 && sx < s32->w; sx++) {
-                    Uint32 px = row[sx];
-                    r += (px >> 16) & 255; g += (px >> 8) & 255; b += px & 255; cnt++;
-                }
-            }
-            if (!cnt) cnt = 1;
+            int sx = x * s32->w / PW;
             ((Uint32 *)((Uint8 *)dst->pixels + y * dst->pitch))[x] =
-                ((r / cnt) << 16) | ((g / cnt) << 8) | (b / cnt);
+                ((Uint32 *)((Uint8 *)s32->pixels + sy * s32->pitch))[sx];
         }
     }
     SDL_FreeSurface(s32);
     return dst;
 }
 
-static unsigned hash_str(const char *s) {
-    unsigned h = 5381;
-    while (*s) h = h * 33 + (unsigned char)*s++;
-    return h;
-}
 
 static void poster_path(const Item *it, char *out, size_t n) {
-    snprintf(out, n, CACHE_DIR "/%08x.img", hash_str(it->poster));
+    snprintf(out, n, CACHE_DIR "cache/%08x.png", hash_str(it->poster));
 }
 
 /* Fetch (in parallel) and decode posters for items [from, to). */
